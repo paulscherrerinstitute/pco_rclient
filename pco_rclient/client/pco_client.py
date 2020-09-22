@@ -36,7 +36,7 @@ class PcoWarning(NoTraceBackWithLineNumber):
     pass
 
 def is_valid_connection_address(connection_address):
-    if bool(re.match("tcp:[/]{2}[0-9]{3}.[0-9]{3}.[0-9]{3}.[0-9]{3}:[0-9]{4}", connection_address)):
+    if bool(re.match("tcp:[/]{2}[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]{4,5}", connection_address)):
         return connection_address
     elif bool(re.match("tcp:[/]{2}\w*:[0-9]{4}", connection_address)):
         return connection_address
@@ -102,22 +102,25 @@ class PcoWriter(object):
                "the flask server running on xbl-daq-32 and the writer process "
                "service (pco_writer_1).")
 
-    def __init__(self, output_file='', dataset_name='data', 
+    def __init__(self, output_file='tmp.h5', dataset_name='data', 
                 connection_address='tcp://129.129.99.104:8080', n_frames=0,
                 user_id=503, max_frames_per_file=20000, debug=False):
         self.connection_address = is_valid_connection_address(connection_address)
-        self.flask_api_address = is_valid_rest_api_address("http://xbl-daq-32:9901", 'flask_api_address')
-        self.writer_api_address = is_valid_rest_api_address("http://xbl-daq-32:9555", 'writer_api_address')
+        self.flask_api_address = is_valid_rest_api_address(
+            "http://xbl-daq-32:9901", 'flask_api_address')
+        self.writer_api_address = is_valid_rest_api_address(
+            "http://xbl-daq-32:9555", 'writer_api_address')
         self.status = 'initialized'
         self.last_run_json = None
         self.configured = False
         if not debug:
             is_writer_running = self.is_running()
             if not is_writer_running:
-                self.output_file = is_valid_output_file(output_file)
+                self.output_file = is_valid_output_file(output_file, 'output_file')
                 self.dataset_name = dataset_name
                 self.n_frames = is_valid_int_parameter(n_frames, 'n_frames')
-                self.max_frames_per_file = is_valid_int_parameter(max_frames_per_file, 'max_frames_per_file')
+                self.max_frames_per_file = is_valid_int_parameter(
+                    max_frames_per_file, 'max_frames_per_file')
                 self.user_id = is_valid_int_parameter(user_id,'user_id')
                 self.configured = True
             else:
@@ -147,7 +150,7 @@ class PcoWriter(object):
         is_writer_running = self.is_running()
         if not is_writer_running:
             if output_file is not None:
-                self.output_file = is_valid_output_file(output_file)
+                self.output_file = is_valid_output_file(output_file, 'output_file')
             if dataset_name is not None:
                 self.dataset_name = dataset_name
             if n_frames is not None:
