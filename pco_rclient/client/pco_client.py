@@ -463,21 +463,13 @@ class PcoWriter(object):
         print("Waiting for the writer to finish")
         print("  (Press Ctrl-C to stop waiting)")
         spinner = itertools.cycle(['-', '/', '|', '\\'])
-        msg = "Status:"
+        msg = self.get_progress_message()
         sys.stdout.write(msg)
         sys.stdout.flush()
         try:
             while self.is_running():
-                stats = self.get_statistics()
-                n_req = stats.get('n_frames', -1)
-                n_rcvd = stats.get('n_received_frames', 0)
-                n_wrtn = stats.get('n_written_frames', 0)
-                pc_rcvd = float(n_rcvd) / n_req * 100.0
-                pc_wrtn = float(n_wrtn) / n_req * 100.0
-                msg = ("Status: {}, # of frames received : {} ({:.1f}%), "
-                       "# of frames written: {} ({:.1f}%) {}".format(
-                        stats['value'], n_rcvd, pc_rcvd, n_wrtn, pc_wrtn,
-                        (next(spinner))))
+                msg = ("{} {}".format(self.get_progress_message(),
+                                      (next(spinner))))
                 sys.stdout.write('\r\033[K')
                 sys.stdout.write(msg)
                 sys.stdout.flush()
@@ -492,6 +484,26 @@ class PcoWriter(object):
                 print("\nWriter is not running anymore, exiting wait().\n")
             else:
                 print("\nWriter is still running, exiting wait().\n")
+
+    def get_progress_message(self):
+        """
+        Return a string indicating the current progress of the writer.
+        """
+
+        stats = self.get_statistics()
+        if stats is None:
+            msg = "Status: not available"
+        else:
+            status = stats.get('value', "unknown")
+            n_req = stats.get('n_frames', -1)
+            n_rcvd = stats.get('n_received_frames', 0)
+            n_wrtn = stats.get('n_written_frames', 0)
+            pc_rcvd = float(n_rcvd) / n_req * 100.0
+            pc_wrtn = float(n_wrtn) / n_req * 100.0
+            msg = ("Status: {}, # of frames received : {} ({:.1f}%), "
+                    "# of frames written: {} ({:.1f}%)".format(
+                    status, n_rcvd, pc_rcvd, n_wrtn, pc_wrtn))
+        return msg
 
     def flush_cam_stream(self, verbose=False):
         try:
