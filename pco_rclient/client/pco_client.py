@@ -31,11 +31,14 @@ class NoTraceBackWithLineNumber(Exception):
         sys.tracebacklimit = None
         return None
 
+
 class PcoError(NoTraceBackWithLineNumber):
     pass
 
+
 class PcoWarning(NoTraceBackWithLineNumber):
     pass
+
 
 def insert_placeholder(string, index):
     return string[:index] + "%03d" + string[index:]
@@ -97,6 +100,7 @@ def validate_network_address(network_address, protocol='tcp'):
         returned.
 
     """
+
     # ip v4 pattern with no leading zeros and values up to 255
     ip_pattern = ("(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}"
                   "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")
@@ -196,12 +200,16 @@ ROUTES = {
     "finished": "/finished"
 }
 
+
 class PcoPcoError(Exception):
     pass
 
+
 class PcoWriter(object):
-    """Proxy Class to control the PCO writer
     """
+    Proxy Class to control the PCO writer.
+    """
+
     def __str__(self):
         return("Proxy Class to control the PCO writer. It communicates with "
                "the flask server running on xbl-daq-32 and the writer process "
@@ -441,7 +449,6 @@ class PcoWriter(object):
         else:
             print("\nWriter is already running, impossible to start() "
                   "again.\n")
-            return None
 
     def wait(self, verbose=False):
         """
@@ -451,9 +458,10 @@ class PcoWriter(object):
         # check if writer is running before killing it
         if not self.is_running():
             print("\nWriter is not running, nothing to wait().\n")
-        else:
-            print("Waiting for the writer to finish")
-            print("  (Press Ctrl-C to stop waiting)")
+            return
+
+        print("Waiting for the writer to finish")
+        print("  (Press Ctrl-C to stop waiting)")
         spinner = itertools.cycle(['-', '/', '|', '\\'])
         msg = "Status:"
         sys.stdout.write(msg)
@@ -504,7 +512,6 @@ class PcoWriter(object):
             context.term()
         except KeyboardInterrupt:
             pass
-        return
 
     def stop(self, verbose=False):
         """
@@ -531,7 +538,6 @@ class PcoWriter(object):
             if verbose:
                 print("\nWriter is not running, impossible to stop(). "
                       "Please start it using the start() method.\n")
-            return None
 
     def get_written_frames(self):
         """
@@ -645,6 +651,7 @@ class PcoWriter(object):
         status attribute.
         """
 
+        # Try if a status of a running writer process is available
         status = self.get_current_status()
         if status is None:
             # Writer process is currently not running
@@ -664,7 +671,6 @@ class PcoWriter(object):
             else:
                 # Something went wrong somewhere, status is not known.
                 status = "unknown"
-        self.status = status
         return status
 
     def get_current_status(self):
