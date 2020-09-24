@@ -161,6 +161,7 @@ def validate_nonneg_int_parameter(parameter_int, name):
                        "not a non-negative integer" % name)
 
 def validate_output_file(output_file, name):
+    output_file = os.path.expanduser(output_file)
     if bool(re.match("[%./a-zA-Z0-9_-]*.h5", output_file)):
         return output_file
     else:
@@ -220,14 +221,28 @@ class PcoWriter(object):
                  flask_api_address = "http://xbl-daq-32:9901",
                  writer_api_address = "http://xbl-daq-32:9555",
                  user_id=503, max_frames_per_file=20000, debug=False):
+        """
+        Initialize the PCO Writer object.
+        """
+
         self.flask_api_address = validate_rest_api_address(
             flask_api_address, 'flask_api_address')
         self.writer_api_address = validate_rest_api_address(
             writer_api_address, 'writer_api_address')
-        self.status = 'initialized'
+
+        # set default values for configuration items
+        self.connection_address = ''
+        self.output_file = ''
+        self.dataset_name = ''
+        self.n_frames = 0
+        self.max_frames_per_file = 0
+        self.user_id = -1
+
+        # set some start values
         self.last_run_id = 0
         self.last_run_json = None
         self.configured = False
+        self.status = 'initialized'
 
         if not debug:
             if not self.is_running():
@@ -269,7 +284,8 @@ class PcoWriter(object):
             self.output_file = validate_output_file(output_file, 'output_file')
             self.user_id = validate_nonneg_int_parameter(0, 'user_id')
             self.n_frames = validate_nonneg_int_parameter(n_frames, 'n_frames')
-            self.dataset_name = dataset_name
+            self.dataset_name = validate_dataset_name(
+                dataset_name, "dataset_name")
             self.max_frames_per_file = validate_nonneg_int_parameter(
                 max_frames_per_file, 'max_frames_per_file')
             self.configured = True
@@ -334,7 +350,8 @@ class PcoWriter(object):
                 self.output_file = validate_output_file(
                     output_file, 'output_file')
             if dataset_name is not None:
-                self.dataset_name = dataset_name
+                self.dataset_name = validate_dataset_name(
+                dataset_name, "dataset_name")
             if n_frames is not None:
                 self.n_frames = validate_nonneg_int_parameter(
                     n_frames, 'n_frames')
@@ -376,7 +393,8 @@ class PcoWriter(object):
     #     if not is_writer_running:
     #         self.output_file = validate_output_file(
     #             self.output_file, 'output_file')
-    #         self.dataset_name = self.dataset_name
+    #         self.dataset_name = validate_dataset_name(
+    #             self.dataset_name, "dataset_name")
     #         self.n_frames = validate_nonneg_int_parameter(
     #             self.n_frames, 'n_frames')
     #         self.user_id = validate_nonneg_int_parameter(
@@ -403,12 +421,12 @@ class PcoWriter(object):
 
     def get_configuration(self, verbose=False):
         configuration_dict = {
-            "connection_address" : self.connection_address,
-            "output_file":self.output_file,
-            "n_frames" : self.n_frames,
-            "user_id" : self.user_id,
-            "dataset_name" : self.dataset_name,
-            "max_frames_per_file" : self.max_frames_per_file,
+            "connection_address": self.connection_address,
+            "output_file": self.output_file,
+            "n_frames": str(self.n_frames),
+            "user_id": str(self.user_id),
+            "dataset_name": self.dataset_name,
+            "max_frames_per_file": str(self.max_frames_per_file),
             "statistics_monitor_address": "tcp://*:8088",
             "rest_api_port": "9555",
             "n_modules": "1"
@@ -429,12 +447,13 @@ class PcoWriter(object):
                 "configure() command before you start()")
 
         # check if writer is running before starting it
+        response = 0
         if not self.is_running():
             request_url = self.flask_api_address + ROUTES["start_pco"]
             try:
                 self.status = 'starting'
-                response = requests.post(request_url,
-                    data=json.dumps(self.get_configuration())).json()
+                data_json = json.dumps(self.get_configuration())
+                response = requests.post(request_url, data=data_json).json()
                 if validate_response(response):
                     self.last_run_id += 1
                     if verbose:
@@ -449,6 +468,7 @@ class PcoWriter(object):
         else:
             print("\nWriter is already running, impossible to start() "
                   "again.\n")
+        return response
 
     def wait(self, verbose=False):
         """
@@ -494,18 +514,18 @@ class PcoWriter(object):
         if stats is None:
             msg = "Status: not available"
         else:
-            status = stats.get('value', "unknown")
+            status = stats.get('status', "unknown")
             n_req = stats.get('n_frames', -1)
             n_rcvd = stats.get('n_received_frames', 0)
             n_wrtn = stats.get('n_written_frames', 0)
             pc_rcvd = float(n_rcvd) / n_req * 100.0
             pc_wrtn = float(n_wrtn) / n_req * 100.0
-            msg = ("Status: {}, # of frames received : {} ({:.1f}%), "
-                    "# of frames written: {} ({:.1f}%)".format(
+            msg = ("Status: {}, #received: {:4d} ({:.1f}%), "
+                    "#written: {:4d} ({:.1f}%)".format(
                     status, n_rcvd, pc_rcvd, n_wrtn, pc_wrtn))
         return msg
 
-    def flush_cam_stream(self, verbose=False):
+    def flush_cam_stream(self, verbose=False, timeout=500):
         try:
             if verbose:
                 print("Flushing camera stream ... (Ctrl-C to stop)")
@@ -513,13 +533,16 @@ class PcoWriter(object):
             socket = context.socket(zmq.PULL)
             socket.connect(self.connection_address)
             x = 0
-            while True:
+            receiving = bool(socket.poll(timeout))
+            while receiving:
                 string = socket.recv()
+                print(x)
                 if x % 2 != 1:
                     d = json.loads(string.decode())
                     if verbose:
                         print(d)
                 x+=1
+                receiving = bool(socket.poll(timeout))
             socket.close()
             context.term()
         except KeyboardInterrupt:
@@ -530,6 +553,7 @@ class PcoWriter(object):
         Stop the writer process
         """
         # check if writer is running before killing it
+        response = 0
         if self.is_running():
             self.status = 'stopping'
             request_url = self.writer_api_address + ROUTES["stop"]
@@ -550,6 +574,7 @@ class PcoWriter(object):
             if verbose:
                 print("\nWriter is not running, impossible to stop(). "
                       "Please start it using the start() method.\n")
+        return response
 
     def get_written_frames(self):
         """
@@ -620,7 +645,7 @@ class PcoWriter(object):
                     print("PCO writer did not return a validated statistics "
                           "response")
                 return None
-        except TimeoutError:
+        except requests.ConnectionError:
             # We expect a timeout error if the writer is not running, so return
             # None
             return None
@@ -701,7 +726,7 @@ class PcoWriter(object):
         try:
             response = requests.get(request_url, timeout=3).json()
             return(response['value'])
-        except TimeoutError:
+        except requests.ConnectionError:
             # We expect a timeout error if the writer is not running, so return
             # None in this case.
             return(None)
@@ -734,6 +759,7 @@ class PcoWriter(object):
 
     def kill(self, verbose=False):
         # check if writer is running before killing it
+        response = 0
         if self.is_running():
             self.status = 'killing'
             request_url = self.writer_api_address + ROUTES["kill"]
@@ -753,6 +779,7 @@ class PcoWriter(object):
             if verbose:
                 print("\nWriter is not running, impossible to kill(). Please "
                       "start it using the start() method.\n")
+        return response
 
     def reset(self):
         """
@@ -783,7 +810,8 @@ class PcoWriter(object):
         try:
             assert self.output_file == validate_output_file(
                 self.output_file, 'output_file')
-            assert self.dataset_name == self.dataset_name
+            assert self.dataset_name == validate_dataset_name(
+                self.dataset_name, "dataset_name")
             assert self.n_frames == validate_nonneg_int_parameter(
                 self.n_frames, 'n_frames')
             assert self.user_id == validate_nonneg_int_parameter(
