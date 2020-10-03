@@ -1,16 +1,24 @@
 #!/bin/env python
 # -*- coding: UTF-8 -*-
+
+from epics import caput, caget
+
+
+
 import sys
 import time
 import getpass
 from datetime import datetime
 import os
 import inspect
-import re
+from itertools import ifilter
 
-debug = True
+
 # inserts the current client's code to path
-from pco_client import PcoWriter
+sys.path.insert(0, '/sls/X02DA/data/e15741/git/pco_rclient/')
+from pco_rclient import PcoWriter
+
+
 
 
 def get_datetime_now():
@@ -26,19 +34,22 @@ output_str = get_datetime_now()
 # verboses 
 VERBOSE = True
 # user id
+
+
+
 if not debug:
     user_id = int(getpass.getuser()[1:])
 else:
     user_id = 0
 # IOC's name
-# ioc_name = 'X02DA-CCDCAM2'
+ioc_name = 'X02DA-CCDCAM2'
 #ioc_name = 'X02DA-CCDCAM3'
-ioc_name = 'g'
 # Output file path
 if not debug:
     outpath = "/sls/X02DA/data/e{}/Data10/pco_test/".format(user_id)
 else:
     outpath = '/home/hax_l/software/lib_cpp_h5_writer/tomcat/output/'
+
 if not os.path.isdir(outpath):
     os.makedirs(outpath)
 
@@ -81,17 +92,23 @@ def config_cam_transfer():
 if not debug:
     config_cam_transfer()
 
+
 ###########################
 #### PCO CLIENT OBJECT ####
 ###########################
-connection_address = 'tcp://129.129.99.104:8080'
-pco_controller = PcoWriter(connection_address="tcp://129.129.99.104:8080", 
-                           user_id=user_id, debug=True,
+if not debug:
+    pco_controller = PcoWriter(connection_address="tcp://129.129.99.104:8080", 
+                           user_id=user_id)
+else:
+    pco_controller = PcoWriter(connection_address="tcp://129.129.99.104:8080", 
+                           user_id=user_id, debug=debug,
                            output_file=os.path.join(outpath, 'test.h5'),
                            n_frames=10, dataset_name='data')
 
+
 if pco_controller.is_running():
     pco_controller.stop()
+
 
 problems = 0
 ok_flag = True

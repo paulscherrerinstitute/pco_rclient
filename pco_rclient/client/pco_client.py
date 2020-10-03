@@ -435,34 +435,36 @@ class PcoWriter(object):
             (default = False)
 
         """
-
-        try:
-            if verbose:
-                print("Flushing camera stream ... (Ctrl-C to stop)")
+        if not self.is_running():
+            try:
+                if verbose:
+                    print("Flushing camera stream ... (Ctrl-C to stop)")
+                    if timeout > 0:
+                        print("Flush will terminate after {} ms of inactivity on "
+                            "the data stream.".format(timeout))
+                context = zmq.Context()
+                socket = context.socket(zmq.PULL)
+                socket.connect(self.connection_address)
+                packets_counter = 0
                 if timeout > 0:
-                    print("Flush will terminate after {} ms of inactivity on "
-                          "the data stream.".format(timeout))
-            context = zmq.Context()
-            socket = context.socket(zmq.PULL)
-            socket.connect(self.connection_address)
-            x = 0
-            if timeout > 0:
-                    receiving = bool(socket.poll(timeout))
-            else:
-                receiving = True
-            while receiving:
-                string = socket.recv()
-                if x % 2 != 1:
-                    if verbose:
-                        d = json.loads(string.decode())
-                        print(x, d)
-                x+=1
-                if timeout > 0:
-                    receiving = bool(socket.poll(timeout))
-            socket.close()
-            context.term()
-        except KeyboardInterrupt:
-            pass
+                        receiving = bool(socket.poll(timeout))
+                else:
+                    receiving = True
+                while receiving:
+                    string = socket.recv()
+                    if packets_counter % 2 != 1:
+                        if verbose:
+                            d = json.loads(string.decode())
+                            print(packets_counter, d)
+                    packets_counter+=1
+                    if timeout > 0:
+                        receiving = bool(socket.poll(timeout))
+                socket.close()
+                context.term()
+            except KeyboardInterrupt:
+                pass
+            return packets_counter
+        return None
 
     def get_configuration(self, verbose=False):
         configuration_dict = {
@@ -816,6 +818,7 @@ class PcoWriter(object):
             self.status = 'configured'
         else:
             self.status = 'unconfigured'
+        return self.status
 
     def start(self, wait=True, timeout=10, verbose=False):
         """
@@ -1005,6 +1008,7 @@ class PcoWriter(object):
         writer. If the writer finishes before reaching this number, the wait is
         also finished.
 
+
         Parameters
         ----------
         nframes : int
@@ -1077,5 +1081,4 @@ class PcoWriter(object):
                 print("\nWriter is not running anymore, exiting wait().\n")
             else:
                 print("\nWriter is still running, exiting wait().\n")
-
         return True
