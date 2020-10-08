@@ -4,6 +4,17 @@
 # Overview
 This is the python client for the pco cameras running at Tomcat beamline (Paul Scherrer Institute). It allows one to perform operations on the PCO cameras. 
 
+# Usage
+
+## pco_controller via python script
+The pco_controller is meant for flexible usage and control of the pco writer from within python scripts. 
+
+
+```python
+    pco_controller = PcoWriter(connection_address="tcp://129.129.99.104:8080", 
+                    user_id=user_id, output_file='test.h5', dataset_name="data", n_frames=nframes)
+```
+
 Parameters:
 
 | Name  |  Description  |
@@ -18,7 +29,20 @@ Parameters:
 | max_frames_per_file  | Defines the max frames on each file (h5 output with multiple chunked files)  |
 | debug  | Runs the client on a local debug configuration.  |
 
-Methods:
+
+# Installation
+
+To create a new conda environment with the package installed:
+```bash
+conda create --name <env-name> -c paulscherrerinstitute pco_rclient
+```
+
+To install the package on a previously existing conda environment:
+```bash
+conda install -c paulscherrerinstitute pco_rclient
+```
+
+# Methods:
 
 | Name  |  Description  | Parameters |
 |---|---|---|
@@ -45,28 +69,5 @@ Methods:
 | validate_configuration | Validate that the current configuration parameters are valid and sufficient for an acquisition. | |
 | wait | Wait for the writer to finish the writing process. |  verbose=False |
 | wait_nframes |Wait for the writer to have written a given number of frames to file. |  nframes, inactivity_timeout=-1, verbose=False|
-
-# Installation
-
-To create a new conda environment with the package installed:
-```bash
-conda create --name <env-name> -c paulscherrerinstitute pco_rclient
-```
-
-To install the package on a previously existing conda environment:
-```bash
-conda install -c paulscherrerinstitute pco_rclient
-```
-
-# Usage
-
-## pco_controller via python script
-The pco_controller is meant for flexible usage and control of the pco writer from within python scripts. 
-
-
-```python
-    pco_controller = PcoWriter(connection_address="tcp://129.129.99.104:8080", 
-                    user_id=user_id, output_file='test.h5', dataset_name="data", n_frames=nframes)
-```
 
 
