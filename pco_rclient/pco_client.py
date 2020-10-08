@@ -216,6 +216,7 @@ ROUTES = {
     "statistics":"/statistics",
     "stop": "/stop",
     "kill": "/kill",
+    "error": "/error",
     "server_log": "/server_log",
     "server_uptime": "/server_uptime",
     "ack": "/ack",
@@ -507,6 +508,30 @@ class PcoWriter(object):
                         "#written: {:4d}".format(
                         status, n_rcvd, n_wrtn))
         return msg
+
+    def get_server_error(self, verbose=False):
+        """
+        Retrieve the the last error
+
+        Returns
+        -------
+        error_msg : str
+            The last error message from the writer or None (if not existant).
+
+        """
+        request_url = self.flask_api_address+ROUTES["error"]
+        try:
+            response = requests.get(request_url).json()
+            if 'success' in response:
+                if verbose:
+                    print("\nPCO writer error:")
+                    print(response)
+                    self.status = response['status']
+                return response['error']
+        except Exception as e:
+            return None
+        return None
+
 
     def get_server_log(self, verbose=False):
         """
@@ -853,24 +878,27 @@ class PcoWriter(object):
                         print("\nPCO writer trigger start successfully "
                               "submitted to the server.\n")
                 else:
-                    print("\nPCO writer trigger start failed. "
-                          "Server response: %s\n" % (response))
+                    if verbose:
+                        print("\nPCO writer trigger start failed. "
+                            "Server response: %s\n" % (response))
             except requests.ConnectionError:
                 raise PcoError("The writer server seems to be disconnected "
                                "and is not responding.")
             except:
                 raise
         else:
-            print("\nWriter is already running, impossible to start() "
-                  "again.\n")
+            if verbose: 
+                print("\nWriter is already running, impossible to start() "
+                    "again.\n")
         # waits for is_running if wait=True
         if 'success' in response and wait:
             timeout_limit = time.time() + timeout
             while not self.is_running():
                 if time.time() > timeout_limit:
-                    print("WARNING!\n"
-                          "PCO writer did not report reaching the running "
-                          "state within the timeout of {} s. ".format(timeout))
+                    if verbose:
+                        print("WARNING!\n"
+                            "PCO writer did not report reaching the running "
+                            "state within the timeout of {} s. ".format(timeout))
                     break
                 time.sleep(0.15)
         self.status = self.get_status()

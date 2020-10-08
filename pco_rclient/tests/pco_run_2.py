@@ -1,61 +1,60 @@
 #!/bin/env python
 # -*- coding: UTF-8 -*-
-
 from epics import caput, caget
-
-
-
 import sys
 import time
 import getpass
 from datetime import datetime
 import os
 import inspect
-from itertools import ifilter
 
 
+"""
+POC Camera writer test script #2
+
+Description:
+Instantiates a PcoWriter object, configures, and receives all the expected frames.
+
+Workflow:
+    1) Instantiation of a PcoWriter object 
+    2) configure, 
+    3) status
+    4) start
+    5) status
+    6) flush_cam_stream
+    7) get_configuration
+    8) get_server_log
+    9) get_server_uptime
+    10) get_statistics
+    11) is_connected
+    12) is_running
+    13) get_statistics_writer
+    14) wait
+    15) status
+    16) stop
+    17) get_statistics_last_run
+    18) status
+    19) status_last_run
+"""
+
+# debug
+debug = True
 # inserts the current client's code to path
-sys.path.insert(0, '/sls/X02DA/data/e15741/git/pco_rclient/')
-from pco_rclient import PcoWriter
-
-
-
+if not debug:
+    sys.path.insert(0, '/sls/X02DA/data/e15741/git/pco_rclient/')
+    from pco_rclient import PcoWriter
+else:
+    sys.path.insert(0, '/home/hax_l/software/lib_cpp_h5_writer/pco_rclient/pco_rclient')
+    from pco_client import PcoWriter
 
 def get_datetime_now():
     return datetime.now().strftime("%H%M%S")
 
-###############################
-#### SCRIPT USER VARIABLES ####
-###############################
-# number of frames
-nframes = 20
-# defines the current time for the uniqueness of the output file
-output_str = get_datetime_now()
-# verboses 
-VERBOSE = True
-# user id
-
-
-
-if not debug:
-    user_id = int(getpass.getuser()[1:])
-else:
-    user_id = 0
-# IOC's name
-ioc_name = 'X02DA-CCDCAM2'
-#ioc_name = 'X02DA-CCDCAM3'
-# Output file path
-if not debug:
-    outpath = "/sls/X02DA/data/e{}/Data10/pco_test/".format(user_id)
-else:
-    outpath = '/home/hax_l/software/lib_cpp_h5_writer/tomcat/output/'
-
-if not os.path.isdir(outpath):
-    os.makedirs(outpath)
 
 ##########################################
 #### CAMERA CONFIGURATION AND METHODS ####
 ##########################################
+
 # IOC COMMANDS
 COMMANDS = {
     "CAMERA":       ":CAMERA",
@@ -71,8 +70,8 @@ COMMANDS = {
 def get_caput_cmd(ioc_name, command):
     return str(ioc_name+command)
 # starts the camera transfer
-def start_cam_transfer(n_frames=nframes):
-    caput(get_caput_cmd(ioc_name, COMMANDS["SAVESTOP"]), nframes) # Sets the number of frames to transfer
+def start_cam_transfer(n_frames):
+    caput(get_caput_cmd(ioc_name, COMMANDS["SAVESTOP"]), n_frames) # Sets the number of frames to transfer
     caput(get_caput_cmd(ioc_name, COMMANDS["CAMERA"]), 1) # Starts the camera
     time.sleep(1)
     caput(get_caput_cmd(ioc_name, COMMANDS["FTRANSFER"]), 1) # Starts the transfer
@@ -88,10 +87,38 @@ def config_cam_transfer():
     caput(get_caput_cmd(ioc_name, COMMANDS["CLEARMEM"]), 1)
     caput(get_caput_cmd(ioc_name, COMMANDS["SET_PARAM"]), 1)
 
+###############################
+#### SCRIPT USER VARIABLES ####
+###############################
+
+# number of frames
+nframes = 20
+# defines the current time for the uniqueness of the output file
+output_str = get_datetime_now()
+# verboses 
+VERBOSE = True
+# user id
+if not debug:
+    user_id = int(getpass.getuser()[1:])
+else:
+    user_id = 0
+# IOC's name
+# ioc_name = 'X02DA-CCDCAM2'
+#ioc_name = 'X02DA-CCDCAM3'
+ioc_name = 'MTEST-CAQTD'
+# Output file path
+if not debug:
+    outpath = "/sls/X02DA/data/e{}/Data10/pco_test/".format(user_id)
+else:
+    outpath = '/home/hax_l/software/lib_cpp_h5_writer/tomcat/output/'
+
+if not os.path.isdir(outpath):
+    os.makedirs(outpath)
+
+
 # configure the camera
 if not debug:
     config_cam_transfer()
-
 
 ###########################
 #### PCO CLIENT OBJECT ####
@@ -100,7 +127,7 @@ if not debug:
     pco_controller = PcoWriter(connection_address="tcp://129.129.99.104:8080", 
                            user_id=user_id)
 else:
-    pco_controller = PcoWriter(connection_address="tcp://129.129.99.104:8080", 
+    pco_controller = PcoWriter(connection_address="tcp://pc9808:9999", 
                            user_id=user_id, debug=debug,
                            output_file=os.path.join(outpath, 'test.h5'),
                            n_frames=10, dataset_name='data')
@@ -122,7 +149,7 @@ output_str = get_datetime_now()
 # runs the writer for an unlimited number of frames
 nframes = 20
 # configure
-print("pco_controller.configure...", end="")
+print ("pco_controller.configure...", end="")
 conf_dict = pco_controller.configure(output_file=os.path.join(
     outpath, 'test'+output_str+'.h5'),user_id=user_id,
     dataset_name="data", n_frames=nframes)
@@ -251,30 +278,30 @@ else:
     ok_flag = True
 
 
-# wait
+# wait -> ALL FRAMES COME
 print('pco_controller.wait...')
 pco_controller.wait()
 
-# gets status
+# gets status, if still running -> PROBLEM
 print('pco_controller.status()... (after start)', end="")
-if pco_controller.get_status() not in ['receiving', 'writing']:
+if pco_controller.get_status() in ['receiving', 'writing']:
     problems += 1
     print("Problem with get_status() method while running...")
     print(' ⨯')
 else:
     print(' ✓')
     
-# stop
+# stop -> ALREADY STOPPED (as all the frames arrived)
 print('pco_controller.stop...', end="")
-pco_controller.stop()
-if pco_controller.get_status() not in ['finished', 'stopping']:
+ret_stop = pco_controller.stop()
+if ret_stop != 0:
     problems += 1
     print(' ⨯')
 else:
     print(' ✓')
 
 
-print("pco_controller.get_statistics_last_run()... (after start/stop)", end="")
+print("pco_controller.get_statistics_last_run()... (after receiving all frames)", end="")
 statistics_dict = pco_controller.get_statistics_last_run()
 statistics_ref = {'first_frame_id': '2466', 'user_id': '0', 'n_written_frames': '20', 'n_lost_frames': '0', 'end_time': 'Fri Oct  2 16:38:09 2020\n', 'start_time': 'Fri Oct  2 16:34:51 2020\n', 'n_frames': '20', 'dataset_name': 'data', 'duration_sec': '198.19', 'writing_rate': '0.10091326504869065', 'output_file': '/home/hax_l/software/lib_cpp_h5_writer/tomcat/output/test163451.h5', 'status': 'finished', 'success': True}
 if statistics_dict['success'] == False and statistics_dict['status'] is 'unknown':
@@ -294,17 +321,9 @@ else:
     print(' ⨯')
     ok_flag = True
 
-# gets status
-print('pco_controller.status()... (after start/stop)', end="")
-if pco_controller.get_status() not in ['finished', 'stopping']:
-    problems += 1
-    # print("Problem with get_status() after start/stop...")
-    print(' ⨯')
-else:
-    print(' ✓')
 
 # get_status_last_run
-print('pco_controller.get_status_last_run()... (after start/stop)', end="")
+print('pco_controller.get_status_last_run()... (after receiving all frames)', end="")
 if pco_controller.get_status_last_run() != 'finished':
     problems += 1
     # print("Problem with get_status_last_run() after start/stop...")
@@ -312,6 +331,16 @@ if pco_controller.get_status_last_run() != 'finished':
 else:
     print(' ✓')
 
+# gets status after receiving all frames - > finished
+print('pco_controller.status()... (after receiving all frames)', end="")
+if pco_controller.get_status() not in ['finished', 'stopping']:
+    problems += 1
+    # print("Problem with get_status() after start/stop...")
+    print(' ⨯')
+else:
+    print(' ✓')
+
+sys.exit(problems)
 
 
-print("Number of problems: ", problems)
+

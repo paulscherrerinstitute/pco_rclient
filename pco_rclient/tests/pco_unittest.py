@@ -7,12 +7,19 @@ from datetime import datetime
 import os
 import re
 import inspect
-from itertools import ifilter
 import unittest
 
+
+
+debug=True
 # inserts the current client's code to path
-sys.path.insert(0, '/sls/X02DA/data/e15741/git/pco_rclient/')
-from pco_rclient import PcoWriter
+if not debug:
+    sys.path.insert(0, '/sls/X02DA/data/e15741/git/pco_rclient/')
+    from pco_rclient import PcoWriter
+else:
+    sys.path.insert(0, '/home/hax_l/software/lib_cpp_h5_writer/pco_rclient/pco_rclient')
+    from pco_client import PcoWriter
+
 
 
 def get_datetime_now():
@@ -31,14 +38,18 @@ output_str = get_datetime_now()
 # verboses 
 VERBOSE = True
 # user id
-user_id = int(getpass.getuser()[1:])
+if not debug:
+    user_id = int(getpass.getuser()[1:])
+else:
+    user_id = 0
 # IOC's name
 ioc_name = 'X02DA-CCDCAM2'
 #ioc_name = 'X02DA-CCDCAM3'
 # Output file path
-outpath = "/sls/X02DA/data/e{}/Data10/pco_test/".format(user_id)
-if not os.path.isdir(outpath):
-    os.makedirs(outpath)
+if not debug:
+    outpath = "/sls/X02DA/data/e{}/Data10/pco_test/".format(user_id)
+else:
+    outpath='/home/hax_l/software/lib_cpp_h5_writer/pco_rclient/pco_rclient/tests/output'
 
 ##########################################
 #### CAMERA CONFIGURATION AND METHODS ####
@@ -77,11 +88,12 @@ def config_cam_transfer():
     caput(get_caput_cmd(ioc_name, COMMANDS["SET_PARAM"]), 1)
 
 # configure the camera
-config_cam_transfer()
+if not debug:
+    config_cam_transfer()
 
 
 class TestPcoClientMethods(unittest.TestCase):
-    w = PcoWriter() 
+    w = PcoWriter(debug=True) 
 
     ####################################
     # TESTS BEFORE STARTING THE WRITER #
@@ -114,9 +126,11 @@ class TestPcoClientMethods(unittest.TestCase):
             each frame sends 2 packets. Asserts if the packets_counter is not 
             the exact double of the nframes (+1 because it starts at zero)
         """
-        start_cam_transfer(nframes)
-        packets_counter = self.w.flush_cam_stream(timeout=5000, verbose=False)
-        stop_cam_transfer()
+        if not debug:
+            start_cam_transfer(nframes)
+        packets_counter = self.w.flush_cam_stream(timeout=5000, verbose=True)
+        if not debug:
+            stop_cam_transfer()
         self.assertEqual(packets_counter/2, nframes+1)
 
     def test_get_configuration(self):
@@ -354,8 +368,30 @@ class TestPcoClientMethods(unittest.TestCase):
         self.assertEqual(ret_stop, 0)
 
 
+    def test_start(self):
+        """
+        Test start method
+
+        Asserts
+        ----------
+        ret_start : int
+            Start method returns 0 if the writer is not running
+        """     
+        # writer start
+        ret_stop = self.w.start()
+        # writer wait
+        ret_stop = self.w.wait()
+        # with the writer not running -> written_frames from previous run
+        ret_stop = self.w.stop()
+        # writer is not running -> returns 0
+        self.assertEqual(ret_stop, 0)
+
+
 if __name__ == '__main__':
-    w = PcoWriter(connection_address="tcp://129.129.99.104:8080", 
-                           user_id=user_id)
+    # w = PcoWriter(connection_address="tcp://129.129.99.104:8080", 
+    #                        user_id=user_id)
+    w = PcoWriter(connection_address="tcp://pc9808:9999", output_file=os.path.join(
+                                outpath,'output_test'+output_str+'.h5'),
+                           user_id=user_id, debug=True)
     TestPcoClientMethods.w = w
     unittest.main()
