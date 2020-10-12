@@ -366,7 +366,7 @@ else:
     print(' ⨯')
     ok_flag = True
 
-# start -> it needs to fail
+# start -> it needs to fail -> status: starting
 print("pco_controller.start...", end="")
 pco_controller.start()
 if pco_controller.get_status() == 'receiving':
@@ -374,17 +374,21 @@ if pco_controller.get_status() == 'receiving':
     problems += 1
 else:
     print(' ✓')
-    
 
+if pco_controller.get_status() == 'starting':
+    print(' ✓')
+else:
+    print(' ⨯')
+    problems += 1
+    
 # it will error out
 time.sleep(0.5)
 print("pco_controller.error...", end="")
-pco_controller.get_server_error(False)
 if pco_controller.get_status() == 'error':
     print(' ✓')
 else:
     print(' ⨯')
-
+    problems += 1
 
 
 sys.exit(problems)

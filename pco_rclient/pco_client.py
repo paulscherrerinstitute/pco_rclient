@@ -526,7 +526,7 @@ class PcoWriter(object):
                 if verbose:
                     print("\nPCO writer error:")
                     print(response)
-                    self.status = response['status']
+                self.status = response['status']
                 return response['error']
         except Exception as e:
             return None
