@@ -6,11 +6,10 @@ source:
     path: ..
 
 requirements:
-    build:
-        - python
     run:
         - python
         - requests
+        - pyzmq
 
 build:
     noarch: python
@@ -18,4 +17,4 @@ build:
 
 about:
     home: https://github.com/paulscherrerinstitute/pco_rclient
-    summary: "Rest client script for the pco writer."
+    summary: "Rest client for the lib_cpp_h5_writer / pco writer."
