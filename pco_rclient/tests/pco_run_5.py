@@ -352,7 +352,7 @@ else:
 
 
 # configures it again with same dataset_name
-print ("pco_controller.configure... (with a taken dataset_name", end="")
+print ("pco_controller.configure... (with a taken dataset_name)", end="")
 conf_dict = pco_controller.configure(output_file=os.path.join(
     outpath, 'test'+output_str+'.h5'),user_id=user_id,
     dataset_name="data", n_frames=nframes)
