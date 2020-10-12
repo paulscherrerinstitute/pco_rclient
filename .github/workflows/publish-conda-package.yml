@@ -3,6 +3,7 @@ name: conda_publish
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -10,7 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: publish-to-conda
-      uses: lhdamiani/conda-publish-action@master
+      uses: paulscherrerinstitute/conda-publish-action@master
       with:
         subdir: 'conda-recipe'
         anacondatoken: ${{ secrets.ANACONDA_TOKEN }}
