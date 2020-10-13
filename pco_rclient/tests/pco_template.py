@@ -8,6 +8,8 @@ Description:
 Instantiates a PcoWriter object, configures, and receives 20 frames.
 
 """
+from __future__ import print_function
+
 from epics import caput, caget
 import sys
 import time
@@ -15,7 +17,7 @@ import getpass
 from datetime import datetime
 import os
 import inspect
-import pco_rclient
+from pco_rclient import PcoWriter
 
 def get_datetime_now():
     return datetime.now().strftime("%H%M%S")
