@@ -107,8 +107,6 @@ ok_flag = True
 ##############################################
 #### TEST METHODS WITH THE RUNNING WRITER ####
 ##############################################
-# runs the writer for an unlimited number of frames
-nframes = 20
 # configure
 print ("pco_controller.configure...", end="")
 conf_dict = pco_controller.configure(output_file=os.path.join(
