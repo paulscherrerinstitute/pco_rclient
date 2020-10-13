@@ -1,4 +1,4 @@
-[![CodeFactor](https://www.codefactor.io/repository/github/paulscherrerinstitute/pco_rclient/badge)](https://www.codefactor.io/repository/github/paulscherrerinstitute/pco_rclient) 
+[![CodeFactor](https://www.codefactor.io/repository/github/paulscherrerinstitute/pco_rclient/badge)](https://www.codefactor.io/repository/github/paulscherrerinstitute/pco_rclient) ![GitHub Release Date](https://img.shields.io/github/release-date/paulscherrerinstitute/pco_rclient) ![release](https://img.shields.io/github/v/release/paulscherrerinstitute/pco_rclient) ![language](https://img.shields.io/github/languages/top/paulscherrerinstitute/pco_rclient)
 
 
 # Overview
