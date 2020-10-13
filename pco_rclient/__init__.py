@@ -1,1 +1,1 @@
-from pco_rclient.pco_client import PcoWriter
+from pco_rclient import PcoWriter
