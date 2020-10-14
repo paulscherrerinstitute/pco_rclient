@@ -4,6 +4,11 @@
 # Overview
 This is the python client for the pco cameras running at Tomcat beamline (Paul Scherrer Institute). It allows one to perform operations on the PCO cameras. 
 
+
+![architecture](https://github.com/paulscherrerinstitute/lib_cpp_h5_writer/raw/tomcat/docs/pco_diagram.jpg)
+
+
+
 # Usage
 
 ## pco_controller via python script
