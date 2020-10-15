@@ -602,8 +602,8 @@ class PcoWriter(object):
         """
         Retrieve the statistics from the previous writer run.
 
-        Returns:
-        --------
+        Returns
+        -------
         stats : dict or None
             Returns the dictionary of statistics if request is successful,
             None otherwise.
@@ -629,8 +629,8 @@ class PcoWriter(object):
         """
         Retrieve the statistics from a running writer process.
 
-        Returns:
-        --------
+        Returns
+        -------
         stats : dict or None
             Returns the dictionary of statistics if request is successful
             (writer is running and responding), None otherwise.
@@ -669,7 +669,12 @@ class PcoWriter(object):
 
     def get_status(self, verbose=False):
         """
-        Return the status of the PCO writer client instance.
+        Gets the status of the PCO writer client instance.
+
+        Returns
+        -------
+        status : str
+            The current status of the client.
         """
 
         if self.is_running():
@@ -833,6 +838,11 @@ class PcoWriter(object):
     def reset(self):
         """
         Reset the writer client object.
+        
+        Returns
+        -------
+        status : str
+            The current status of the client.
         """
 
         self.kill()
