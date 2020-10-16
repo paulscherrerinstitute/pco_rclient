@@ -326,7 +326,7 @@ class PcoWriter(object):
 
         """
 
-        if self.max_frames_per_file <= self.n_frames:
+        if self.max_frames_per_file <= self.n_frames and self.max_frames_per_file!= 0 and self.n_frames!= 0:
             # regex matching a pattern of "%d" or "%Nd" where N can be any
             # number of digits
             regexp = re.compile(r'%(\d|)+d')
