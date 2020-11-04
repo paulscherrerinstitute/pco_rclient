@@ -475,7 +475,7 @@ class PcoWriter(object):
             "user_id": str(self.user_id),
             "dataset_name": self.dataset_name,
             "max_frames_per_file": str(self.max_frames_per_file),
-            "rest_api_port": "9555",
+            "rest_api_port": str(self.flask_api_address).split(":")[2],
             "n_modules": "1"
         }
         if verbose:
