@@ -1079,8 +1079,9 @@ class PcoWriter(object):
                   "frames".format(nframes))
             print("  (Press Ctrl-C to stop waiting)")
         spinner = itertools.cycle(['-', '/', '|', '\\'])
-        nframes_proc = self.get_written_frames()
-        perc_done = nframes_proc * 100.0 / nframes
+        new_nframes = self.get_written_frames()
+        nframes_proc = new_nframes if new_nframes is not None else 0
+        perc_done = float(nframes_proc) * 100.0 / float(nframes)
         msg = ("Processed {} of {} frames ({:.1f}% done)".format(
             nframes_proc, nframes, perc_done))
         sys.stdout.write(msg)
@@ -1089,8 +1090,9 @@ class PcoWriter(object):
         nframes_old = 0
         try:
             while nframes_proc < nframes:
-                nframes_proc = self.get_written_frames()
-                perc_done = nframes_proc * 100.0 / nframes
+                new_nframes = self.get_written_frames()
+                nframes_proc = new_nframes if new_nframes is not None else nframes_proc
+                perc_done = float(nframes_proc) * 100.0 / float(nframes)
                 msg = ("Processed {} of {} frames ({:.1f}% done)".format(
                     nframes_proc, nframes, perc_done))
                 msg1 = ("{} {}".format(msg, (next(spinner))))
