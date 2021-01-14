@@ -38,7 +38,8 @@ import requests
 import sys
 import time
 import zmq
-
+import jsonschema
+from jsonschema import validate
 
 class NoTraceBackWithLineNumber(Exception):
     def __init__(self, msg):
@@ -59,10 +60,64 @@ class NoTraceBackWithLineNumber(Exception):
 class PcoError(NoTraceBackWithLineNumber):
     pass
 
-
 class PcoWarning(NoTraceBackWithLineNumber):
     pass
 
+class NotAValidConfig(NoTraceBackWithLineNumber):
+    pass
+
+class CamNotFound(NoTraceBackWithLineNumber):
+    pass
+
+# definition of the pco config json schema
+pco_config_schema = {
+    "description": "A representation of the pco camera configuration file.",
+    "type": "object",
+    "required": [ "cameras"],
+    "properties": {
+        "cameras":{
+            "type": "array",
+            "items": { "$ref": "#/definitions/cameras" }
+        }
+    },
+    "definitions": {
+        "cameras": {
+            "type": "object",
+            "required": [ "name",
+                        "connection_address",
+                        "flask_api_address",
+                        "writer_api_address" ],
+            "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the pco camera."
+                    },
+                    "connection_address": {
+                        "type": "string",
+                        "description": "Connection address of such camera."
+                    },
+                    "flask_api_address": {
+                        "type": "string",
+                        "description": "Flask api address that will serve such camera."
+                    },
+                    "writer_api_address": {
+                        "type": "string",
+                        "description": "Writer api address that "
+                                "will be used for such camera."
+                    },
+            }
+        }
+    }
+}
+
+
+# validates pco cam json config file based on the schema
+def validate_config(jsonData):
+    try:
+        validate(instance=jsonData, schema=pco_config_schema)
+    except jsonschema.exceptions.ValidationError as err:
+        return False
+    return True
 
 def insert_placeholder(string, index):
     return string[:index] + "_%03d" + string[index:]
@@ -232,27 +287,38 @@ class PcoWriter(object):
                  connection_address='tcp://129.129.99.104:8080',
                  flask_api_address = "http://xbl-daq-32:9901",
                  writer_api_address = "http://xbl-daq-32:9555",
-                 user_id=503, max_frames_per_file=20000, debug=False):
+                 user_id=503, max_frames_per_file=20000, config_file='', debug=False):
         """
         Initialize the PCO Writer object.
         """
 
-        # Note: the tcp://129.129.99.104:8080 connection address corresponds
-        #       to the 1G copper link on x02da-pco-4
-        #       (last updated: 2020-09-31)
-        
-        self.flask_api_address = validate_rest_api_address(
-            flask_api_address, 'flask_api_address')
-        self.writer_api_address = validate_rest_api_address(
-            writer_api_address, 'writer_api_address')
+        if config_file is '':
+            self.flask_api_address = validate_rest_api_address(
+                flask_api_address, 'flask_api_address')
+            self.writer_api_address = validate_rest_api_address(
+                writer_api_address, 'writer_api_address')
+        else:
+            with open(args.file) as f:
+                json_cam_dict = json.load(f)
+            if not validate_config(json_cam_dict):
+                raise NotAValidConfig("PCO configuration file not valid.")
+            cam_config = None
+            for camera in json_cam_dict['cameras']:
+                if camera['name'] == "pco"+str(args.camera):
+                    cam_config = camera
+            if cam_config is None:
+                raise CamNotFound("Configuration for camera %s could not be found on "
+                    "the config file (%s)." % (args.camera, args.file))
+            self.flask_api_address = cam_config['flask_api_address']
+            self.writer_api_address = cam_config['writer_api_address']
+            self.connection_address = cam_config['connection_address']
 
         if not self.is_connected():
             print("WARNING: The writer server is not responding!")
             print("A connection attempt with the following network address "
-                  "failed:\n  {}".format(self.flask_api_address))
+                "failed:\n  {}".format(self.flask_api_address))
 
         # set default values for configuration items
-        self.connection_address = ''
         self.output_file = ''
         self.dataset_name = ''
         self.n_frames = 0
@@ -296,7 +362,7 @@ class PcoWriter(object):
         else:
             print("\nSetting debug configurations... \n")
             self.flask_api_address = validate_rest_api_address(
-                "http://localhost:9901", 'fask_api_address')
+                "http://localhost:9901", 'flask_api_address')
             self.writer_api_address = validate_rest_api_address(
                 "http://localhost:9555", 'writer_api_address')
             self.connection_address = validate_connection_address(
@@ -326,7 +392,7 @@ class PcoWriter(object):
 
         """
 
-        if self.max_frames_per_file <= self.n_frames and self.max_frames_per_file!= 0 and self.n_frames!= 0:
+        if self.max_frames_per_file <= self.n_frames:
             # regex matching a pattern of "%d" or "%Nd" where N can be any
             # number of digits
             regexp = re.compile(r'%(\d|)+d')
@@ -602,8 +668,8 @@ class PcoWriter(object):
         """
         Retrieve the statistics from the previous writer run.
 
-        Returns
-        -------
+        Returns:
+        --------
         stats : dict or None
             Returns the dictionary of statistics if request is successful,
             None otherwise.
@@ -629,8 +695,8 @@ class PcoWriter(object):
         """
         Retrieve the statistics from a running writer process.
 
-        Returns
-        -------
+        Returns:
+        --------
         stats : dict or None
             Returns the dictionary of statistics if request is successful
             (writer is running and responding), None otherwise.
@@ -669,12 +735,7 @@ class PcoWriter(object):
 
     def get_status(self, verbose=False):
         """
-        Gets the status of the PCO writer client instance.
-
-        Returns
-        -------
-        status : str
-            The current status of the client.
+        Return the status of the PCO writer client instance.
         """
 
         if self.is_running():
@@ -838,11 +899,6 @@ class PcoWriter(object):
     def reset(self):
         """
         Reset the writer client object.
-        
-        Returns
-        -------
-        status : str
-            The current status of the client.
         """
 
         self.kill()
