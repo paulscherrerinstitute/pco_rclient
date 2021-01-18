@@ -284,31 +284,34 @@ class PcoWriter(object):
     """
 
     def __init__(self, output_file='', dataset_name='', n_frames=0,
-                 connection_address='tcp://129.129.99.104:8080',
+                 connection_address='tcp://129.129.99.47:8080',
                  flask_api_address = "http://xbl-daq-32:9901",
                  writer_api_address = "http://xbl-daq-32:9555",
-                 user_id=503, max_frames_per_file=20000, config_file='', debug=False):
+                 user_id=503, max_frames_per_file=20000, config_file='', cam='', debug=False):
         """
         Initialize the PCO Writer object.
         """
 
-        if config_file is '':
+        if cam is '':
             self.flask_api_address = validate_rest_api_address(
                 flask_api_address, 'flask_api_address')
             self.writer_api_address = validate_rest_api_address(
                 writer_api_address, 'writer_api_address')
         else:
-            with open(args.file) as f:
+            config_json = "/home/dbe/git/lib_cpp_h5_writer/tomcat/pco_config.json"
+            if config_file != '':
+                config_json = config_file
+            with open(config_json) as f:
                 json_cam_dict = json.load(f)
             if not validate_config(json_cam_dict):
                 raise NotAValidConfig("PCO configuration file not valid.")
             cam_config = None
             for camera in json_cam_dict['cameras']:
-                if camera['name'] == "pco"+str(args.camera):
+                if camera['name'] == cam:
                     cam_config = camera
             if cam_config is None:
                 raise CamNotFound("Configuration for camera %s could not be found on "
-                    "the config file (%s)." % (args.camera, args.file))
+                    "the config file (%s)." % (cam, config_json))
             self.flask_api_address = cam_config['flask_api_address']
             self.writer_api_address = cam_config['writer_api_address']
             self.connection_address = cam_config['connection_address']
