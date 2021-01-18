@@ -292,7 +292,7 @@ class PcoWriter(object):
         Initialize the PCO Writer object.
         """
 
-        if cam is '':
+        if cam == '':
             self.flask_api_address = validate_rest_api_address(
                 flask_api_address, 'flask_api_address')
             self.writer_api_address = validate_rest_api_address(
