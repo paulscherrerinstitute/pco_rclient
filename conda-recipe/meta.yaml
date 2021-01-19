@@ -15,7 +15,7 @@ requirements:
 
 build:
     noarch: python
-    number: 2
+    number: 0
 
 about:
     home: https://github.com/paulscherrerinstitute/pco_rclient
