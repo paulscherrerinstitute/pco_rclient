@@ -284,9 +284,9 @@ class PcoWriter(object):
     """
 
     def __init__(self, output_file='', dataset_name='', n_frames=0,
-                 connection_address='tcp://129.129.99.47:8080',
-                 flask_api_address = "http://xbl-daq-32:9901",
-                 writer_api_address = "http://xbl-daq-32:9555",
+                 connection_address='tcp://10.10.1.26:8080',
+                 flask_api_address = "http://xbl-daq-34:9901",
+                 writer_api_address = "http://xbl-daq-34:9555",
                  user_id=503, max_frames_per_file=20000, config_file='', cam='', debug=False):
         """
         Initialize the PCO Writer object.
@@ -298,11 +298,9 @@ class PcoWriter(object):
             self.writer_api_address = validate_rest_api_address(
                 writer_api_address, 'writer_api_address')
         else:
-            config_json = "/home/dbe/git/lib_cpp_h5_writer/tomcat/pco_config.json"
             if config_file != '':
-                config_json = config_file
-            with open(config_json) as f:
-                json_cam_dict = json.load(f)
+                with open(config_file) as f:
+                     json_cam_dict = json.load(f)
             if not validate_config(json_cam_dict):
                 raise NotAValidConfig("PCO configuration file not valid.")
             cam_config = None
@@ -315,7 +313,6 @@ class PcoWriter(object):
             self.flask_api_address = cam_config['flask_api_address']
             self.writer_api_address = cam_config['writer_api_address']
             self.connection_address = cam_config['connection_address']
-
         if not self.is_connected():
             print("WARNING: The writer server is not responding!")
             print("A connection attempt with the following network address "
@@ -335,8 +332,6 @@ class PcoWriter(object):
 
         if not debug:
             if not self.is_running():
-                self.connection_address = validate_connection_address(
-                    connection_address, 'connection_address')
                 if output_file:
                     self.output_file = validate_output_file(
                         output_file, 'output_file')

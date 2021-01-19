@@ -89,7 +89,7 @@ config_cam_transfer()
 #### PCO CLIENT OBJECT ####
 ###########################
 #pco_controller = PcoWriter(connection_address="tcp://129.129.99.107:8080",
-pco_controller = PcoWriter(config_file="./pco_config.json", cam='pco2_10',
+pco_controller = PcoWriter(cam="pco2", config_file="/home/dbe/pco_writer.json",
                            user_id=user_id)
 
 
@@ -165,6 +165,12 @@ print('pco_controller.wait...')
 pco_controller.wait()
 # Stop the camera transfer via EPICS IOC CAPUT
 stop_cam_transfer()
+
+
+# deactivates the writer
+if pco_controller.is_running():
+    pco_controller.stop()
+
 
 print("pco_controller.get_statistics_last_run()... (after start/stop)", end="")
 statistics_dict = pco_controller.get_statistics_last_run()
