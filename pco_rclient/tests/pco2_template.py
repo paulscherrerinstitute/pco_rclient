@@ -73,7 +73,8 @@ output_str = get_datetime_now()
 user_id = 503
 
 # IOC's name
-ioc_name = 'X02DA-CCDCAM2'
+ioc_name = 'X02DA-CCDCAM1'
+#ioc_name = 'X02DA-CCDCAM3'
 
 # Output file path
 #outpath = "/sls/X02DA/data/e{}/Data10/pco_test/".format(user_id)
@@ -114,8 +115,11 @@ ok_flag = True
 # configure
 print ("pco_controller.configure...", end="")
 conf_dict = pco_controller.configure(output_file=os.path.join(
-    outpath, 'test'+output_str+'.h5'),user_id=user_id,
+    outpath, 'test'+output_str+'.h5'),user_id=user_id, 
     dataset_name="data", n_frames=nframes)
+
+
+pco_controller.get_configuration(True)
 
 # status = configured
 if pco_controller.get_status() is not 'configured':
@@ -127,7 +131,7 @@ else:
     print(' ⨯')
     ok_flag = True
 
-pco_controller.get_configuration(True)
+
 
 # start
 print("pco_controller.start...", end="")
@@ -147,9 +151,6 @@ if not is_running:
     print(' ⨯')
 else:
     print(' ✓')
-
-
-pco_controller.get_configuration(True)
 
 # gets status
 print('pco_controller.status()... (after start)', end="")
@@ -173,7 +174,6 @@ stop_cam_transfer()
 # deactivates the writer
 if pco_controller.is_running():
     pco_controller.stop()
-
 
 print("pco_controller.get_statistics_last_run()... (after start/stop)", end="")
 statistics_dict = pco_controller.get_statistics_last_run(True)
