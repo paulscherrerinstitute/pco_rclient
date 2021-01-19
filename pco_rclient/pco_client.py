@@ -609,7 +609,10 @@ class PcoWriter(object):
             The last 10 lines of the writer server.
 
         """
-        request_url = self.flask_api_address+ROUTES["server_log"]
+        service_name = 'pco_writer-pco2'
+        if str(self.flask_api_address).split(":")[2] == '9901':
+            service_name = 'pco_writer-pco1'
+        request_url = self.flask_api_address+ROUTES["server_log"]+"/"+service_name
         try:
             response = requests.get(request_url).json()
             if 'success' in response:
@@ -631,7 +634,10 @@ class PcoWriter(object):
             The uptime of the writer server service.
 
         """
-        request_url = self.flask_api_address+ROUTES["server_uptime"]
+        service_name = 'pco_writer-pco2'
+        if str(self.flask_api_address).split(":")[2] == '9901':
+            service_name = 'pco_writer-pco1'
+        request_url = self.flask_api_address+ROUTES["server_uptime"]+"/"+service_name
         try:
             response = requests.get(request_url, data={"key": "uptime"}).json()
             if 'success' in response:
