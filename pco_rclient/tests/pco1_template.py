@@ -118,6 +118,9 @@ conf_dict = pco_controller.configure(output_file=os.path.join(
     outpath, 'test'+output_str+'.h5'),user_id=user_id,
     dataset_name="data", n_frames=nframes)
 
+
+pco_controller.get_configuration(True)
+
 # status = configured
 if pco_controller.get_status() is not 'configured':
     problems += 1

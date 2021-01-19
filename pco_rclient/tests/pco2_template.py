@@ -89,7 +89,7 @@ config_cam_transfer()
 #### PCO CLIENT OBJECT ####
 ###########################
 #pco_controller = PcoWriter(connection_address="tcp://129.129.99.107:8080",
-pco_controller = PcoWriter(config_file="./pco_config.json", cam='pco2',
+pco_controller = PcoWriter(config_file="./pco_config.json", cam='pco2_10',
                            user_id=user_id)
 
 
@@ -127,7 +127,7 @@ else:
     print(' ⨯')
     ok_flag = True
 
-
+pco_controller.get_configuration(True)
 
 # start
 print("pco_controller.start...", end="")
