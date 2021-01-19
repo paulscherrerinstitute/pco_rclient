@@ -799,7 +799,7 @@ class PcoWriter(object):
 
         """
 
-        request_url = self.flask_api_address+ROUTES["status"]
+        request_url = self.flask_api_address+ROUTES["status"]+"/"+str(self.writer_api_address).split(":")[2]
         try:
             response = requests.get(request_url, timeout=3).json()
             return(response['status'])
@@ -850,7 +850,7 @@ class PcoWriter(object):
         Verify wether a writer process is currently running.
         """
 
-        request_url = self.flask_api_address+ROUTES["status"]
+        request_url = self.flask_api_address+ROUTES["status"]+"/"+str(self.writer_api_address).split(":")[2]
         try:
             response = requests.get(request_url, timeout=3).json()
             return bool(response['status'] in ('receiving', 'writing'))
