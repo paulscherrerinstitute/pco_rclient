@@ -47,7 +47,7 @@ class NoTraceBackWithLineNumber(Exception):
             type(msg).__name__ == "ReadTimeout"):
             print("\n ConnectionError/ReadTimeout: it seems that the server "
                   "is not running (check xbl-daq-32 pco writer service "
-                  "(pco_writer_1), ports, etc).\n")
+                  "(pco_writer-pco{1-2}), ports, etc).\n")
         try:
             ln = sys.exc_info()[-1].tb_lineno
         except AttributeError:
@@ -377,7 +377,7 @@ class PcoWriter(object):
     def __str__(self):
         return("Proxy Class to control the PCO writer. It communicates with "
                "the flask server running on xbl-daq-32 and the writer process "
-               "service (pco_writer_1).")
+               "service (pco_writer-pco{1-2}).")
 
     def assert_filenumber_placeholder(self):
         """
