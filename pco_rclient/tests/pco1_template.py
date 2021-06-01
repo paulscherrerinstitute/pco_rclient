@@ -18,8 +18,8 @@ from datetime import datetime
 import os
 import inspect
 #from pco_rclient import PcoWriter
-sys.path.insert(0, '/home/dbe/git/pco_rclient/pco_rclient')
-from pco_client import PcoWriter
+#sys.path.insert(0, '/home/dbe/git/pco_rclient/pco_rclient')
+from pco_rclient import PcoWriter
 
 def get_datetime_now():
     return datetime.now().strftime("%H%M%S")
@@ -64,21 +64,21 @@ def config_cam_transfer():
 #### SCRIPT USER VARIABLES ####
 ###############################
 # number of frames
-nframes = 20
+nframes = 10
 # defines the current time for the uniqueness of the output file
 output_str = get_datetime_now()
 
 # user id
 #user_id = int(getpass.getuser()[1:])
-user_id = 503
+user_id = 18600
 
 # IOC's name
 ioc_name = 'X02DA-CCDCAM1'
 #ioc_name = 'X02DA-CCDCAM3'
 
 # Output file path
-#outpath = "/sls/X02DA/data/e{}/Data10/pco_test/".format(user_id)
-outpath = "/tmp/"
+outpath = "/sls/X02DA/data/e{}/Data10/pco_test/".format(user_id)
+#outpath = "/tmp/"
 
 if not os.path.isdir(outpath):
     os.makedirs(outpath)
@@ -90,7 +90,7 @@ config_cam_transfer()
 #### PCO CLIENT OBJECT ####
 ###########################
 #pco_controller = PcoWriter(connection_address="tcp://129.129.99.107:8080",
-pco_controller = PcoWriter(cam="pco1", config_file="/home/dbe/pco_writer.json",
+pco_controller = PcoWriter(cam="pco1", config_file="/sls/X02DA/data/e18600/git/pco_rclient/pco_rclient/tests/pco_writer.json",
                            user_id=user_id)
 
 
@@ -122,7 +122,7 @@ conf_dict = pco_controller.configure(output_file=os.path.join(
 pco_controller.get_configuration(True)
 
 # status = configured
-if pco_controller.get_status() is not 'configured':
+if pco_controller.get_status() != 'configured':
     problems += 1
     ok_flag = False
 if ok_flag:
@@ -178,7 +178,7 @@ if pco_controller.is_running():
 print("pco_controller.get_statistics_last_run()... (after start/stop)", end="")
 statistics_dict = pco_controller.get_statistics_last_run(True)
 statistics_ref = {'first_frame_id': '2466', 'user_id': '0', 'n_written_frames': '20', 'n_lost_frames': '0', 'end_time': 'Fri Oct  2 16:38:09 2020\n', 'start_time': 'Fri Oct  2 16:34:51 2020\n', 'n_frames': '20', 'dataset_name': 'data', 'duration_sec': '198.19', 'writing_rate': '0.10091326504869065', 'output_file': '/home/hax_l/software/lib_cpp_h5_writer/tomcat/output/test163451.h5', 'status': 'finished', 'success': True}
-if statistics_dict['success'] == False and statistics_dict['status'] is 'unknown':
+if statistics_dict['success'] == False and statistics_dict['status'] == 'unknown':
     problems += 1
     ok_flag=False
 else:
