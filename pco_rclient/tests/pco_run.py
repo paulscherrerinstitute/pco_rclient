@@ -17,22 +17,37 @@ from pco_client import PcoWriter
 
 def get_datetime_now():
     return datetime.now().strftime("%H%M%S")
+#     # IOC COMMANDS
 
+COMMANDS = {
+"CAMERA":       ":CAMERA",
+"FILEFORMAT":   ":FILEFORMAT",
+"RECMODE":      ":RECMODE",
+"STOREMODE":    ":STOREMODE",
+"CLEARMEM":     ":CLEARMEM",
+"SET_PARAM":    ":SET_PARAM",
+"SAVESTOP":     ":SAVESTOP",
+"FTRANSFER":    ":FTRANSFER"
+}
+
+#     ##########################################
+#     #### CAMERA CONFIGURATION AND METHODS ####
+#     ##########################################
 
 # combines the IOCNAME:CMD for a epics command (caput/caget)
 def get_caput_cmd(ioc_name, command):
     return str(ioc_name+command)
 # starts the camera transfer
-def start_cam_transfer(n_frames):
+def start_cam_transfer(ioc_name, n_frames):
     caput(get_caput_cmd(ioc_name, COMMANDS["SAVESTOP"]), n_frames) # Sets the number of frames to transfer
     caput(get_caput_cmd(ioc_name, COMMANDS["CAMERA"]), 1) # Starts the camera
     time.sleep(1)
     caput(get_caput_cmd(ioc_name, COMMANDS["FTRANSFER"]), 1) # Starts the transfer
 # stops the camera transfer
-def stop_cam_transfer():
+def stop_cam_transfer(ioc_name):
     caput(get_caput_cmd(ioc_name, COMMANDS["CAMERA"]), 0) # Stops the camera
 # configures the camera
-def config_cam_transfer():
+def config_cam_transfer(ioc_name):
     caput(get_caput_cmd(ioc_name, COMMANDS["CAMERA"]), 0)
     caput(get_caput_cmd(ioc_name, COMMANDS["FILEFORMAT"]), 2)
     caput(get_caput_cmd(ioc_name, COMMANDS["RECMODE"]), 0)
@@ -40,28 +55,9 @@ def config_cam_transfer():
     caput(get_caput_cmd(ioc_name, COMMANDS["CLEARMEM"]), 1)
     caput(get_caput_cmd(ioc_name, COMMANDS["SET_PARAM"]), 1)
 
-def pco_test(ioc_name,
-            cam_name):
-#     print(os.getpid(), ' : ', ioc_name, connection_address, flask_api_address, writer_api_address)
+def pco_test(ioc_name, cam_name):
+    print(os.getpid(), ' : ', ioc_name, connection_address, flask_api_address, writer_api_address)
     
-
-    ##########################################
-    #### CAMERA CONFIGURATION AND METHODS ####
-    ##########################################
-
-    # IOC COMMANDS
-    COMMANDS = {
-        "CAMERA":       ":CAMERA",
-        "FILEFORMAT":   ":FILEFORMAT",
-        "RECMODE":      ":RECMODE",
-        "STOREMODE":    ":STOREMODE",
-        "CLEARMEM":     ":CLEARMEM",
-        "SET_PARAM":    ":SET_PARAM",
-        "SAVESTOP":     ":SAVESTOP",
-        "FTRANSFER":    ":FTRANSFER"
-    }
- 
-
     ###############################
     #### SCRIPT USER VARIABLES ####
     ###############################
@@ -86,7 +82,7 @@ def pco_test(ioc_name,
         os.makedirs(outpath)
 
     # configure the camera
-    config_cam_transfer()
+    config_cam_transfer(ioc_name)
 
     ###########################
     #### PCO CLIENT OBJECT ####
@@ -165,12 +161,12 @@ def pco_test(ioc_name,
 
 
     # start nframes transfer via EPICS IOC CAPUT
-    start_cam_transfer(nframes)
+    start_cam_transfer(ioc_name, nframes)
     # wait for nframes
     print('pco_controller.wait...')
     pco_controller.wait()
     # Stop the camera transfer via EPICS IOC CAPUT
-    stop_cam_transfer()
+    stop_cam_transfer(ioc_name)
 
 
     # deactivates the writer
