@@ -365,14 +365,7 @@ class PcoWriter(object):
                 "http://localhost:9555", 'writer_api_address')
             self.connection_address = validate_connection_address(
                 "tcp://pc9808:9999", 'connection_address')
-            self.output_file = validate_output_file(output_file, 'output_file')
-            self.user_id = validate_nonneg_int_parameter(0, 'user_id')
-            self.n_frames = validate_nonneg_int_parameter(n_frames, 'n_frames')
-            self.dataset_name = validate_dataset_name(
-                dataset_name, "dataset_name")
-            self.max_frames_per_file = validate_nonneg_int_parameter(
-                max_frames_per_file, 'max_frames_per_file')
-            self.status = 'configured'
+            self.status = 'unconfigured'
 
     def __str__(self):
         return("Proxy Class to control the PCO writer. It communicates with "
@@ -1053,6 +1046,7 @@ class PcoWriter(object):
                 self.connection_address, 'connection_address')
             return True
         except Exception as e:
+            print(e)
             return False
 
     def wait(self, verbose=False):
