@@ -827,8 +827,8 @@ class PcoWriter(object):
 
         stats = self.get_statistics()
         if stats is not None:
-            return stats.get('n_written_frames', None)
-        return None
+            return stats.get('n_written_frames', 0)
+        return 0
 
     def is_connected(self):
         """
@@ -1130,11 +1130,16 @@ class PcoWriter(object):
                 print("\nWriter is not running, nothing to wait().\n")
             return
 
-        if not isinstance(inactivity_timeout, int) or not isinstance(inactivity_timeout, float):
+        if not (isinstance(inactivity_timeout, int) and
+            not isinstance(inactivity_timeout, float)):
             inactivity_timeout = -1
             print("\n")
-            print(" *** WARNING: inactivity_timeout parameter must be an integer (time in seconds)")
-            print(" It will be automatically redefined to the default value -1 (it will wait until the writer is not running anymore)")
+            print(' *** WARNING: inactivity_timeout ' 
+                'parameter must be an integer (time in seconds)')
+            print('It will be automatically redefined ' 
+                'to the default value -1 (it will wait' 
+                'until the writer is not running anymore)')
+            print("\n")
 
         if verbose:
             print("Waiting for the writer to process {} "
