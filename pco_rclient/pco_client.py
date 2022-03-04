@@ -1107,7 +1107,7 @@ class PcoWriter(object):
         ----------
         nframes : int
             The number of frames to wait for.
-        inactivity_timeout : float, optional
+        inactivity_timeout : int, optional
             If larger than zero, wait for so many seconds of writer inactivity
             (meaning that no new frames have been received or written to file)
             before giving up the wait. Set to a value <= 0 to disable this
@@ -1129,6 +1129,12 @@ class PcoWriter(object):
             if verbose:
                 print("\nWriter is not running, nothing to wait().\n")
             return
+
+        if not isinstance(inactivity_timeout, int) or not isinstance(inactivity_timeout, float):
+            inactivity_timeout = -1
+            print("\n")
+            print(" *** WARNING: inactivity_timeout parameter must be an integer (time in seconds)")
+            print(" It will be automatically redefined to the default value -1 (it will wait until the writer is not running anymore)")
 
         if verbose:
             print("Waiting for the writer to process {} "
