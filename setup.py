@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='pco_rclient',
-      version='0.4.9',
+      version='0.4.10',
       description="Rest client script for the pco writer.",
       author='Paul Scherrer Institute (PSI)',
       maintainer="Paul Scherrer Institute",
