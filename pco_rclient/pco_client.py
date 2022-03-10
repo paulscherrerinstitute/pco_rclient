@@ -827,8 +827,8 @@ class PcoWriter(object):
 
         stats = self.get_statistics()
         if stats is not None:
-            return stats.get('n_written_frames', 0)
-        return 0
+            return int(stats.get('n_written_frames', None))
+        return None
 
     def is_connected(self):
         """
@@ -1130,8 +1130,7 @@ class PcoWriter(object):
                 print("\nWriter is not running, nothing to wait().\n")
             return
 
-        if not (isinstance(inactivity_timeout, int) and
-            not isinstance(inactivity_timeout, float)):
+        if not (isinstance(inactivity_timeout, int)):
             inactivity_timeout = -1
             print("\n")
             print(' *** WARNING: inactivity_timeout ' 
@@ -1147,7 +1146,7 @@ class PcoWriter(object):
             print("  (Press Ctrl-C to stop waiting)")
         spinner = itertools.cycle(['-', '/', '|', '\\'])
         new_nframes = self.get_written_frames()
-        nframes_proc = new_nframes if new_nframes is not None else 0
+        nframes_proc = int(new_nframes if new_nframes != None else 0)
         perc_done = float(nframes_proc) * 100.0 / float(nframes)
         msg = ("Processed {} of {} frames ({:.1f}% done)".format(
             nframes_proc, nframes, perc_done))
@@ -1158,7 +1157,7 @@ class PcoWriter(object):
         try:
             while nframes_proc < nframes:
                 new_nframes = self.get_written_frames()
-                nframes_proc = new_nframes if new_nframes is not None else nframes_proc
+                nframes_proc = int(new_nframes if new_nframes != None else nframes_proc)
                 perc_done = float(nframes_proc) * 100.0 / float(nframes)
                 msg = ("Processed {} of {} frames ({:.1f}% done)".format(
                     nframes_proc, nframes, perc_done))
@@ -1172,10 +1171,8 @@ class PcoWriter(object):
                 if ((inactivity_timeout > 0) and
                     (time.time() - last_update_time > inactivity_timeout)):
                     print("\n")
-                    print(" *** WARNING: Writer did not receive all requested "
-                        "images!")
-                    print("     Giving up after {} seconds of inactivity "
-                        "...").format(inactivity_timeout)
+                    print(" *** WARNING: Writer did not receive all requested images!")
+                    print("     Giving up after ",inactivity_timeout," seconds of inactivity...")
                     return(False)
                 time.sleep(0.1)
         except KeyboardInterrupt:
