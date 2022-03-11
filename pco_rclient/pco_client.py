@@ -239,14 +239,14 @@ def validate_nonneg_int_parameter(parameter_int, name):
     parameter_int = int(parameter_int)
     if parameter_int >= 0:
         return parameter_int
-    raise PcoError("Problem with the %s parameter: "
+    raise PcoWarning("Problem with the %s parameter: "
                     "not a non-negative integer" % name)
 
 def validate_output_file(output_file, name):
     output_file = os.path.expanduser(output_file)
     if bool(re.match("[%./a-zA-Z0-9_-]*.h5", output_file)):
         return output_file
-    raise PcoError("Problem with the output file name %s." % name)
+    raise PcoWarning("Problem with the output file name")
 
 def validate_response(server_response, verbose=False):
     if not server_response['success']:
@@ -257,7 +257,7 @@ def validate_rest_api_address(rest_api_address, name):
     addr = validate_network_address(rest_api_address, protocol='http')
     if addr:
         return addr
-    raise PcoError("Problem with the {}:\n  {} does not seem to be a "
+    raise PcoWarning("Problem with the {}:\n  {} does not seem to be a "
                     "valid address".format(name, rest_api_address))
 
 def validate_statistics_response(writer_response, verbose=False):
@@ -635,6 +635,12 @@ class PcoWriter(object):
         """
         Retrieve the the last error
 
+        Parameters
+        ----------
+        verbose : bool, optional
+            Show verbose information during the get_server_error
+            (default = False)
+
         Returns
         -------
         error_msg : str
@@ -658,6 +664,12 @@ class PcoWriter(object):
     def get_server_log(self, verbose=False):
         """
         Retrieve the last 10 lines log of the writer server.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Show verbose information during the get_server_log
+            (default = False)
 
         Returns
         -------
@@ -683,6 +695,12 @@ class PcoWriter(object):
     def get_server_uptime(self, verbose=False):
         """
         Retrieves the uptime of the writer server service.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Show verbose information during the get_server_uptime
+            (default = False)
 
         Returns
         -------
@@ -713,6 +731,12 @@ class PcoWriter(object):
         returned, otherwise the statistics from the last writer process are
         returned.
 
+        Parameters
+        ----------
+        verbose : bool, optional
+            Show verbose information during the get_statistics
+            (default = False)
+
         Returns
         -------
         stats : dict or None
@@ -729,6 +753,12 @@ class PcoWriter(object):
     def get_statistics_last_run(self, verbose=False):
         """
         Retrieve the statistics from the previous writer run.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Show verbose information during the get_statistics_last_run
+            (default = False)
 
         Returns:
         --------
@@ -756,6 +786,12 @@ class PcoWriter(object):
     def get_statistics_writer(self, verbose=False):
         """
         Retrieve the statistics from a running writer process.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Show verbose information during the get_statistics_writer
+            (default = False)
 
         Returns:
         --------
