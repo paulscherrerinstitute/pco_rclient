@@ -287,9 +287,56 @@ class PcoWriter(object):
                  connection_address='tcp://10.10.1.26:8080',
                  flask_api_address = "http://xbl-daq-34:9901",
                  writer_api_address = "http://xbl-daq-34:9555",
-                 user_id=503, max_frames_per_file=20000, config_file='', cam='', debug=False):
+                 user_id=503, max_frames_per_file=20000, config_file='', 
+                 cam='', debug=False):
         """
         Initialize the PCO Writer object.
+
+        Parameters
+        ----------
+        output_file : str, optional
+            The output file name (or file name template) for the hdf5 file.
+            Must end with ".h5" and can contain an optional format specifier
+            such as "02d" which is used for the file numbering in case the
+            frames are distributed over multiple files, see also the
+            `max_frames_per_file` option. If no output_file is provided, a 
+            warning is raised and the PCO object status will be 
+            'unconfigured'. (default = None)
+        dataset_name : str, optional
+            The name of the dataset to be created in the hdf5 file. The dataset
+            will be placed inside the "/exchange" group of the hdf5 file.
+            If no dataset_name is provided, a warning is raised and the PCO 
+            object status will be 'unconfigured'. (default = None)
+        n_frames : int, optional
+            The total number of frames to be written into the file(s). Must be
+            a non-negative integer. (default = 0)
+        connection_address : str, optional
+            The connection address for the zmq stream to the writer.
+            (default = tcp://10.10.1.26:8080)
+        flask_api_address : str, optional
+            The rest flask api address for the writer server
+            (default = http://xbl-daq-34:9901)
+        writer_api_address : str, optional
+            The writer api address for the writer process (valid only during an
+            acquisition). 
+            (default = http://xbl-daq-34:9555)
+        user_id : int, optional
+            The numeric user-ID of the user account used to write the data to
+            disk. (default = 503)
+        max_frames_per_file : int, optional
+            The maximum number of frames to store in a single hdf5 file. Eeach
+            time the number of received frames exceedes this maximum number per
+            file, a new file with an incremented file index (whose format can
+            be controlled by including the corresponding format specifier in
+            the `output_file` name) will be created. (default = 20000)
+        config_file : str, optional
+            The file path to the json configuration file of the pco cameras.
+            (default = '')
+        cam : str, optional
+            Camera identifier that can be used to load a specific configuration
+            from the config_file. (default = '')
+        debug : bool, optional
+            Debugger flag. (default = False)
         """
 
         if cam == '':
@@ -525,6 +572,22 @@ class PcoWriter(object):
         return None
 
     def get_configuration(self, verbose=False):
+        """
+        Method to retrieve the configuration of the PCO object.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Prints the configuration retrieved.
+            (default = False)
+
+        Returns
+        -------
+        conf : dict or None
+            The current configuration of the PCO object.
+        """
+
+
         configuration_dict = {
             "connection_address": self.connection_address,
             "output_file": self.output_file,
@@ -735,6 +798,12 @@ class PcoWriter(object):
     def get_status(self, verbose=False):
         """
         Return the status of the PCO writer client instance.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Show verbose information during the get_status
+            (default = False)
         """
 
         if self.is_running():
@@ -975,6 +1044,11 @@ class PcoWriter(object):
 
         Parameters
         ----------
+        wait : bool, optional
+            Flag to indicate if the stop command should not reutnr
+            until the writer's status changes to stopped.
+        timeout : int, optional
+            Timeout value that it is waited until the writer is stopped.
         verbose : bool, optional
             Show verbose information during the stopping process.
             (default = False)
