@@ -932,7 +932,7 @@ class PcoWriter(object):
 
         stats = self.get_statistics()
         if stats is not None:
-            return int(stats.get('n_written_frames', None))
+            return stats.get('n_written_frames', None)
         return None
 
     def is_connected(self):
