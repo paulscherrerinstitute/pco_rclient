@@ -724,10 +724,10 @@ class PcoWriter(object):
             msg = "Writer: Status not available"
         else:
             status = stats.get("status", "unknown")
-            n_req = stats.get("n_frames", -1)
-            n_rcvd = stats.get("n_received_frames", 0)
-            n_wrtn = stats.get("n_written_frames", 0)
-            if n_req > 0:
+            n_req = int(stats.get("n_frames", -1))
+            n_rcvd = int(stats.get("n_received_frames", 0))
+            n_wrtn = int(stats.get("n_written_frames", 0))
+            if n_req > 0: 
                 pc_rcvd = float(n_rcvd) / n_req * 100.0
                 pc_wrtn = float(n_wrtn) / n_req * 100.0
                 msg = (
@@ -1386,6 +1386,7 @@ class PcoWriter(object):
             out, False otherwise.
 
         """
+        nframes = int(nframes)
 
         if not self.is_running():
             if verbose:
@@ -1441,15 +1442,9 @@ class PcoWriter(object):
                     time.time() - last_update_time > inactivity_timeout
                 ):
                     print("\n")
-                    print(
-                        " *** WARNING: Writer did not receive all requested images!"
-                    )
-                    print(
-                        "     Giving up after ",
-                        inactivity_timeout,
-                        " seconds of inactivity...",
-                    )
-                    return False
+                    print(" *** WARNING: Writer did not receive all requested images!")
+                    print(f"     Giving up after {inactivity_timeout} seconds of inactivity...")
+                    return(False)
                 time.sleep(0.1)
         except KeyboardInterrupt:
             pass
