@@ -727,9 +727,9 @@ class PcoWriter(object):
             msg = "Writer: Status not available"
         else:
             status = stats.get("status", "unknown")
-            n_req = stats.get("n_frames", -1)
-            n_rcvd = stats.get("n_received_frames", 0)
-            n_wrtn = stats.get("n_written_frames", 0)
+            n_req = int(stats.get("n_frames", -1))
+            n_rcvd = int(stats.get("n_received_frames", 0))
+            n_wrtn = int(stats.get("n_written_frames", 0))
             if n_req > 0:
                 pc_rcvd = float(n_rcvd) / n_req * 100.0
                 pc_wrtn = float(n_wrtn) / n_req * 100.0
@@ -974,7 +974,7 @@ class PcoWriter(object):
 
         if self.is_running():
             # A writer process is currently running
-            if not self.status in ("stopping", "killing"):
+            if self.status not in ("stopping", "killing"):
                 # return the status of the running writer
                 status = self.get_status_writer()
                 self.status = status
@@ -1042,11 +1042,10 @@ class PcoWriter(object):
         try:
             response = requests.get(request_url, timeout=3).json()
             return response["status"]
-        except requests.ConnectionError:
+        except requests.ConnectionError as e:
             raise PcoError(
                 "The writer server seems to be disconnected and is "
-                "not responding."
-            )
+                "not responding.") from e
 
     def get_written_frames(self):
         """
@@ -1098,10 +1097,9 @@ class PcoWriter(object):
         try:
             response = requests.get(request_url, timeout=3).json()
             return response["status"] in ("receiving", "writing")
-        except requests.ConnectionError:
+        except requests.ConnectionError as e:
             raise PcoError(
-                "The writer server seems to be disconnected and is not responding."
-            )
+                "The writer server seems to be disconnected and is not responding.") from e
 
     def kill(self, verbose=False):
         """
@@ -1127,11 +1125,11 @@ class PcoWriter(object):
                         print("\nPCO writer process successfully killed.\n")
                 else:
                     print("\nPCO writer kill() failed.")
-            except requests.ConnectionError:
+            except requests.ConnectionError as e:
                 raise PcoError(
                     "The writer server seems to be disconnected "
-                    "and is not responding."
-                )
+                    "and is not responding.") from e
+
         elif verbose:
             print(
                 "\nWriter is not running, impossible to kill(). Please "
@@ -1194,11 +1192,11 @@ class PcoWriter(object):
                     print(
                         "\nPCO writer trigger start failed. Server response: {response}\n"
                     )
-            except requests.ConnectionError:
+            except requests.ConnectionError as e:
                 raise PcoError(
                     "The writer server seems to be disconnected "
-                    "and is not responding."
-                )
+                    "and is not responding.") from e
+
         elif verbose:
             print(
                 "\nWriter is already running, impossible to start() " "again.\n"
@@ -1251,7 +1249,7 @@ class PcoWriter(object):
                         "\nPCO writer stop writer failed. Server response: {response} \n")
             except requests.ConnectionError as e:
                 raise PcoError(
-                    "The writer server seems to be disconnected and is not responding.")
+                    "The writer server seems to be disconnected and is not responding.") from e
 
         elif verbose:
             print(
@@ -1383,6 +1381,7 @@ class PcoWriter(object):
             out, False otherwise.
 
         """
+        nframes = int(nframes)
 
         if not self.is_running():
             if verbose:
