@@ -118,6 +118,7 @@ pco_config_schema = {
     },
 }
 
+
 # Typed Statistics dictionary
 class StatisticsDict(TypedDict, total=False):
     dataset_name: str
@@ -134,46 +135,49 @@ class StatisticsDict(TypedDict, total=False):
     user_id: int
     writing_rate: float
 
-# Method to verify if the dictionary is complete
+
 def keys_in_dict(untyped_dict) -> bool:
-    mandatory_keys = ['dataset_name', 'duration_sec', 'end_time', 
-        'first_frame_id', 'n_frames', 'n_lost_frames', 'n_written_frames',
-        'output_file', 'start_time', 'status', 'success', 'user_id', 
-        'writing_rate']
+    # Method to verify if the dictionary is complete
+    mandatory_keys = [
+        'dataset_name', 'duration_sec', 'end_time', 'first_frame_id',
+        'n_frames', 'n_lost_frames', 'n_written_frames', 'output_file',
+        'start_time', 'status', 'success', 'user_id', 'writing_rate']
     keys_in_dict = untyped_dict.keys()
     return all(key in keys_in_dict for key in mandatory_keys)
 
-# converts an untyped statistics dictionary to typed dictionary
-def convert_to_typed_stat_dict(untyped_dict) -> StatisticsDict:
-    if keys_in_dict(untyped_dict):
-        return StatisticsDict(dataset_name=untyped_dict['dataset_name'], 
-            duration_sec=untyped_dict['duration_sec'], 
-            end_time=untyped_dict['end_time'], 
-            first_frame_id=int(untyped_dict['first_frame_id']), 
-            n_frames=int(untyped_dict['n_frames']), 
-            n_lost_frames=int(untyped_dict['n_lost_frames']), 
-            n_written_frames=int(untyped_dict['n_written_frames']), 
-            output_file=untyped_dict['output_file'], 
-            start_time=untyped_dict['start_time'], 
-            status=untyped_dict['status'], 
-            success=bool(untyped_dict['success']), 
-            user_id=untyped_dict['user_id'], 
-            writing_rate=untyped_dict['writing_rate'],)
 
+def convert_to_typed_stat_dict(untyped_dict) -> StatisticsDict:
+    # converts an untyped statistics dictionary to typed dictionary
+    if keys_in_dict(untyped_dict):
+        return StatisticsDict(
+            dataset_name=untyped_dict['dataset_name'],
+            duration_sec=untyped_dict['duration_sec'],
+            end_time=untyped_dict['end_time'],
+            first_frame_id=int(untyped_dict['first_frame_id']),
+            n_frames=int(untyped_dict['n_frames']),
+            n_lost_frames=int(untyped_dict['n_lost_frames']),
+            n_written_frames=int(untyped_dict['n_written_frames']),
+            output_file=untyped_dict['output_file'],
+            start_time=untyped_dict['start_time'],
+            status=untyped_dict['status'],
+            success=bool(untyped_dict['success']),
+            user_id=untyped_dict['user_id'],
+            writing_rate=untyped_dict['writing_rate'],)
     # Typed conversion not possible
     return untyped_dict
-    
 
-# validates pco cam json config file based on the schema
+
 def validate_config(jsonData):
+    # validates pco cam json config file based on the schema
     try:
         validate(instance=jsonData, schema=pco_config_schema)
     except jsonschema.exceptions.ValidationError as err:
         return False
     return True
 
-# placeholder for multiple h5 files
+
 def insert_placeholder(string, index):
+    # placeholder for multiple h5 files
     return string[:index] + "_%03d" + string[index:]
 
 
@@ -182,8 +186,7 @@ def validate_connection_address(connection_address, name):
     if addr:
         return addr
     raise PcoError(
-        f"Problem with the {name}:\n  {connection_address} "
-        "does not seem to be a valid address"
+        f"Problem with the {name}:\n  {connection_address} does not seem to be a valid address"
     )
 
 
@@ -329,8 +332,7 @@ def validate_rest_api_address(rest_api_address, name):
     if addr:
         return addr
     raise PcoWarning(
-        "Problem with the {}:\n  {} does not seem to be a "
-        "valid address".format(name, rest_api_address)
+        f"Problem with the {name}:\n  {rest_api_address} does not seem to be a valid address."
     )
 
 
@@ -382,13 +384,13 @@ class PcoWriter(object):
             Must end with ".h5" and can contain an optional format specifier
             such as "02d" which is used for the file numbering in case the
             frames are distributed over multiple files, see also the
-            `max_frames_per_file` option. If no output_file is provided, a 
-            warning is raised and the PCO object status will be 
+            `max_frames_per_file` option. If no output_file is provided, a
+            warning is raised and the PCO object status will be
             'unconfigured'. (default = None)
         dataset_name : str, optional
             The name of the dataset to be created in the hdf5 file. The dataset
             will be placed inside the "/exchange" group of the hdf5 file.
-            If no dataset_name is provided, a warning is raised and the PCO 
+            If no dataset_name is provided, a warning is raised and the PCO
             object status will be 'unconfigured'. (default = None)
         n_frames : int, optional
             The total number of frames to be written into the file(s). Must be
@@ -401,7 +403,7 @@ class PcoWriter(object):
             (default = http://xbl-daq-34:9901)
         writer_api_address : str, optional
             The writer api address for the writer process (valid only during an
-            acquisition). 
+            acquisition).
             (default = http://xbl-daq-34:9555)
         user_id : int, optional
             The numeric user-ID of the user account used to write the data to
@@ -659,7 +661,8 @@ class PcoWriter(object):
             if verbose:
                 print("Flushing camera stream ... (Ctrl-C to stop)")
                 if timeout > 0:
-                    print(f"Flush will terminate after {timeout} ms of inactivity on the data stream.")
+                    print(
+                        f"Flush will terminate after {timeout} ms of inactivity on the data stream.")
 
             context = zmq.Context()
             socket = context.socket(zmq.PULL)
@@ -890,7 +893,7 @@ class PcoWriter(object):
             response = requests.get(request_url, timeout=3).json()
 
             self.previous_statistics = convert_to_typed_stat_dict(response)
-            
+
             if verbose:
                 print("\nPCO writer statistics:\n")
                 pprint.pprint(self.previous_statistics)
@@ -1207,10 +1210,7 @@ class PcoWriter(object):
                 if time.time() > timeout_limit:
                     if verbose:
                         print(
-                            "WARNING!\n"
-                            "PCO writer did not report reaching the running "
-                            "state within the timeout of {} s. ".format(timeout)
-                        )
+                            f"WARNING!\n PCO writer did not report reaching the running state within the timeout of {timeout}s.")
                     break
                 time.sleep(0.15)
         self.status = self.get_status()
@@ -1248,11 +1248,10 @@ class PcoWriter(object):
                         )
                 else:
                     print(
-                        "\nPCO writer stop writer failed. Server response: "
-                        "%s\n" % (response)
-                    )
+                        "\nPCO writer stop writer failed. Server response: {response} \n")
             except requests.ConnectionError as e:
-                raise PcoError("The writer server seems to be disconnected " "and is not responding.") from e
+                raise PcoError(
+                    "The writer server seems to be disconnected and is not responding.")
 
         elif verbose:
             print(
@@ -1336,9 +1335,7 @@ class PcoWriter(object):
         sys.stdout.flush()
         try:
             while self.is_running():
-                msg = "{} {}".format(
-                    self.get_progress_message(), (next(spinner))
-                )
+                msg = f"{self.get_progress_message()} {(next(spinner))}"
                 sys.stdout.write("\r\033[K")
                 sys.stdout.write(msg)
                 sys.stdout.flush()
@@ -1377,7 +1374,7 @@ class PcoWriter(object):
             (default = -1)
         verbose : bool, optional
             Show verbose information during waiting.
-            (default = False)        
+            (default = False)
 
         Returns
         -------
@@ -1430,7 +1427,7 @@ class PcoWriter(object):
                 msg = "Processed {} of {} frames ({:.1f}% done)".format(
                     nframes_proc, nframes, perc_done
                 )
-                msg1 = "{} {}".format(msg, (next(spinner)))
+                msg1 = f"{msg} {(next(spinner))}"
                 sys.stdout.write("\r\033[K")
                 sys.stdout.write(msg1)
                 sys.stdout.flush()
@@ -1441,14 +1438,9 @@ class PcoWriter(object):
                     time.time() - last_update_time > inactivity_timeout
                 ):
                     print("\n")
+                    print(" *** WARNING: Writer did not receive all requested images!")
                     print(
-                        " *** WARNING: Writer did not receive all requested images!"
-                    )
-                    print(
-                        "     Giving up after ",
-                        inactivity_timeout,
-                        " seconds of inactivity...",
-                    )
+                        f"     Giving up after {inactivity_timeout} seconds of inactivity...")
                     return False
                 time.sleep(0.1)
         except KeyboardInterrupt:
